@@ -1,17 +1,19 @@
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF
-from PyQt6.QtGui import QPainter
+from PyQt6.QtGui import QPainter, QColor
 from PyQt6.QtTest import QTest
 from piece import Piece
+from PyQt6.QtGui import QPainter, QBrush
 
 class Board(QFrame):  # base the board on a QFrame widget
     updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
     clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
 
     # TODO set the board width and height to be square
-    boardWidth  = 0     # board is 0 squares wide # TODO this needs updating
-    boardHeight = 0     #
-    timerSpeed  = 1     # the timer updates every 1 millisecond
+    # TODO this needs updating
+    boardWidth  = 9     # board is 0 squares wide
+    boardHeight = 9
+    timerSpeed  = 1000     # the timer updates every 1 millisecond
     counter     = 10    # the number the counter will count down from
 
     def __init__(self, parent):
@@ -25,7 +27,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.start()                # start the game which will start the timer
 
         self.boardArray =[]         # TODO - create a 2d int/Piece array to store the state of the game
-        # self.printBoardArray()    # TODO - uncomment this method after creating the array above
+        # self.printBoardArray()      # TODO - uncomment this method after creating the array above
 
     def printBoardArray(self):
         '''prints the boardArray in an attractive way'''
@@ -65,9 +67,9 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
-        # painter = QPainter(self)
-        # self.drawBoardSquares(painter)
-        # self.drawPieces(painter)
+        painter = QPainter(self)
+        self.drawBoardSquares(painter)
+        #self.drawPieces(painter)
 
     def mousePressEvent(self, event):
         '''this event is automatically called when the mouse is pressed'''
@@ -86,14 +88,21 @@ class Board(QFrame):  # base the board on a QFrame widget
     def drawBoardSquares(self, painter):
         '''draw all the square on the board'''
         # TODO set the default colour of the brush
+        self.brush = QBrush(Qt.BrushStyle.SolidPattern)
+        self.brush.setColor(Qt.GlobalColor.lightGray)
+        painter.setBrush(self.brush)
         for row in range(0, Board.boardHeight):
-            for col in range (0, Board.boardWidth):
+            for col in range(0, Board.boardWidth):
                 painter.save()
-                colTransformation = self.squareWidth()* col # TODO set this value equal the transformation in the column direction
-                rowTransformation = 0                       # TODO set this value equal the transformation in the row direction
-                painter.translate(colTransformation,rowTransformation)
-                painter.fillRect()                          # TODO provide the required arguments
+                colTransformation = self.squareWidth() * col  # TODO set this value equal the transformation in the column direction
+                rowTransformation = self.squareHeight() * row  # TODO set this value equal the transformation in the row direction
+                painter.translate(colTransformation, rowTransformation)
+                painter.fillRect(col, row, int(self.squareWidth()), int(self.squareHeight()),self.brush)  # TODO provide the required arguments
                 painter.restore()
+                if self.brush.color() == Qt.GlobalColor.lightGray:
+                    self.brush.setColor(Qt.GlobalColor.darkGray)
+                else:
+                    self.brush.setColor(Qt.GlobalColor.lightGray)
                 # TODO change the colour of the brush so that a checkered board is drawn
 
     def drawPieces(self, painter):
