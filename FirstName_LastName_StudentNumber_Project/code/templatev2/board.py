@@ -8,11 +8,11 @@ from PyQt6.QtGui import QPainter, QBrush
 class Board(QFrame):  # base the board on a QFrame widget
     updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
     clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
-
+    boardSize = 7
     # TODO set the board width and height to be square
     # TODO this needs updating
-    boardWidth  = 9     # board is 0 squares wide
-    boardHeight = 9
+    boardWidth  = boardSize     # board is 0 squares wide
+    boardHeight = boardSize
     timerSpeed  = 1000     # the timer updates every 1 millisecond
     counter     = 10    # the number the counter will count down from
 
@@ -25,9 +25,9 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.timer = QBasicTimer()  # create a timer for the game
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
-
-        self.boardArray =[]         # TODO - create a 2d int/Piece array to store the state of the game
-        # self.printBoardArray()      # TODO - uncomment this method after creating the array above
+        self.boardArray = []         # TODO - create a 2d int/Piece array to store the state of the game
+        self.boardArray = [[Piece(self,x,y) for x in range(self.boardHeight)] for y in range(self.boardWidth)]
+        self.printBoardArray()      # TODO - uncomment this method after creating the array above
 
     def printBoardArray(self):
         '''prints the boardArray in an attractive way'''
@@ -69,7 +69,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         '''paints the board and the pieces of the game'''
         painter = QPainter(self)
         self.drawBoardSquares(painter)
-        #self.drawPieces(painter)
+        self.drawPieces(painter)
 
     def mousePressEvent(self, event):
         '''this event is automatically called when the mouse is pressed'''
@@ -106,16 +106,34 @@ class Board(QFrame):  # base the board on a QFrame widget
                 # TODO change the colour of the brush so that a checkered board is drawn
 
     def drawPieces(self, painter):
-        '''draw the prices on the board'''
-        colour = Qt.GlobalColor.transparent # empty square could be modeled with transparent pieces
+        '''draw the pieces on the board'''
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
+                if col == 0 or row == 0:
+                    continue
                 painter.save()
-                painter.translate()
-
-                # TODO draw some the pieces as ellipses
-                # TODO choose your colour and set the painter brush to the correct colour
-                radius = self.squareWidth() / 4
-                center = QPointF(radius, radius)
+                # Determine the color of the piece based on self.boardArray[row][col]
+                # piece_color = self.determinePieceColor(self.boardArray[row][col])
+                piece_color = QColor(Qt.GlobalColor.white)
+                painter.setBrush(piece_color)
+                painter.setPen(piece_color)
+                # Calculate the position of the piece based on row and column
+                x = col * self.squareWidth()
+                y = row * self.squareHeight()
+                center = QPointF(x, y)
+                # Draw the piece as an ellipse
+                radius = self.squareWidth()/2
                 painter.drawEllipse(center, radius, radius)
                 painter.restore()
+
+    def determinePieceColor(self, piece_value):
+        '''Determine the color of the piece based on its value'''
+        # Example: If piece_value == 'W', return 'white'
+        #          If piece_value == 'B', return 'black'
+        #          If it's empty, return 'transparent' for empty squares
+        if piece_value.getPiece() == 1:
+            return 'white'
+        elif piece_value.getPiece() == 2:
+            return 'black'
+        else:
+            return 'transparent'  # Adjust this based on your needs
