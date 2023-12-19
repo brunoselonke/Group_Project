@@ -17,7 +17,7 @@ class Go(QMainWindow):
 
     def initUI(self):
         '''initiates application UI'''
-        self.setFixedSize(900, 900)  # Set a fixed size for the window
+        self.setFixedSize(700, 700)  # Set a fixed size for the window
         self.board = Board(self)
         self.setCentralWidget(self.board)
         # self.scoreBoard = ScoreBoard()

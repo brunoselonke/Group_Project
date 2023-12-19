@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF
-from PyQt6.QtGui import QPainter, QColor, QImage
+from PyQt6.QtGui import QPainter, QColor, QImage, QPen
 from PyQt6.QtTest import QTest
 from piece import Piece
 from PyQt6.QtGui import QPainter, QBrush
@@ -9,6 +9,7 @@ class Board(QFrame):  # base the board on a QFrame widget
     updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
     clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
     boardSize = 7
+
     # TODO set the board width and height to be square
     # TODO this needs updating
     boardWidth  = boardSize     # board is 0 squares wide
@@ -26,8 +27,11 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
         self.boardArray = []         # TODO - create a 2d int/Piece array to store the state of the game
-        self.boardArray = [[Piece(self,x,y) for x in range(self.boardHeight)] for y in range(self.boardWidth)]
+        self.boardArray = [[Piece(self,x,y) for x in range(self.boardHeight+1)] for y in range(self.boardWidth+1)]
+                                        #+1 makes the pieces been drawn in the last column and line
         self.printBoardArray()      # TODO - uncomment this method after creating the array above
+        self.margin = 100           #controls the margin between the board and the window
+        self.piecesSize = 2.5       #controls pieces sizes, the smaller the number the bigger the piece
 
     def printBoardArray(self):
         '''prints the boardArray in an attractive way'''
@@ -39,11 +43,11 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def squareWidth(self):
         '''returns the width of one square in the board'''
-        return self.contentsRect().width() / self.boardWidth
+        return (self.contentsRect().width() - 2 * self.margin) / self.boardWidth
 
     def squareHeight(self):
         '''returns the height of one square of the board'''
-        return self.contentsRect().height() / self.boardHeight
+        return (self.contentsRect().height() - 2 * self.margin) / self.boardHeight
 
     def start(self):
         '''starts game'''
@@ -68,18 +72,22 @@ class Board(QFrame):  # base the board on a QFrame widget
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
         painter = QPainter(self)
+        painter.translate(self.margin, self.margin)
         board_image = QImage("./assets/light-wooden-background.png")  # Replace "path_to_your_board_image" with the image file path
-        painter.drawImage(self.contentsRect(), board_image)
+        boardRect = self.contentsRect().adjusted(-self.margin, -self.margin, self.margin, self.margin)
+        painter.drawImage(boardRect, board_image)
         self.drawPieces(painter)  # Draw pieces on top of the background
         self.drawBoardSquares(painter)
         self.drawPieces(painter)
 
     def mousePressEvent(self, event):
-        '''this event is automatically called when the mouse is pressed'''
-        clickLoc = "click location ["+str(event.position().x())+","+str(event.position().y())+"]"     # the location where a mouse click was registered
-        print("mousePressEvent() - "+clickLoc)
-        # TODO you could call some game logic here
-        self.clickLocationSignal.emit(clickLoc)
+        '''This event is automatically called when the mouse is pressed'''
+
+        click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
+        print("mousePressEvent() - " + click_loc)
+
+        # Emit the signal with the click location
+        self.clickLocationSignal.emit(click_loc)
 
     def resetGame(self):
         '''clears pieces from the board'''
@@ -92,8 +100,15 @@ class Board(QFrame):  # base the board on a QFrame widget
         '''draw all the square on the board'''
         self.brush = QBrush(Qt.BrushStyle.SolidPattern)
         self.brush.setColor(Qt.GlobalColor.transparent)
+        border_width = 3  # Adjust this value to make the pen ticker or thicker
+        border_color = Qt.GlobalColor.black  # Adjust the color as needed
+
+        pen = QPen(border_color)
+        pen.setWidth(border_width)
+        painter.setPen(pen)
+
         painter.setBrush(self.brush)
-        painter.setPen(Qt.GlobalColor.black)  # Set the pen color to black for borders
+
         for row in range(0, Board.boardHeight):
             for col in range(0, Board.boardWidth):
                 painter.save()
@@ -102,19 +117,16 @@ class Board(QFrame):  # base the board on a QFrame widget
                 painter.translate(colTransformation, rowTransformation)
                 # Fill the squares with transparent color and black borders
                 painter.fillRect(col, row, int(self.squareWidth()), int(self.squareHeight()), self.brush)
-                painter.drawRect(col, row, int(self.squareWidth()), int(self.squareHeight()))  # Draw black borders
+                painter.drawRect(col, row, int(self.squareWidth()),int(self.squareHeight()))  # Draw borders with the specified pen
                 painter.restore()
 
     def drawPieces(self, painter):
         '''draw the pieces on the board'''
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
-                if col == 0 or row == 0:
-                    continue
                 painter.save()
                 # Determine the color of the piece based on self.boardArray[row][col]
-                # piece_color = self.determinePieceColor(self.boardArray[row][col])
-                piece_color = QColor(Qt.GlobalColor.white)
+                piece_color = self.determinePieceColor(self.boardArray[row][col])
                 painter.setBrush(piece_color)
                 painter.setPen(piece_color)
                 # Calculate the position of the piece based on row and column
@@ -122,7 +134,7 @@ class Board(QFrame):  # base the board on a QFrame widget
                 y = row * self.squareHeight()
                 center = QPointF(x, y)
                 # Draw the piece as an ellipse
-                radius = self.squareWidth()/2
+                radius = self.squareWidth() / self.piecesSize
                 painter.drawEllipse(center, radius, radius)
                 painter.restore()
 
@@ -132,8 +144,8 @@ class Board(QFrame):  # base the board on a QFrame widget
         #          If piece_value == 'B', return 'black'
         #          If it's empty, return 'transparent' for empty squares
         if piece_value.getPiece() == 1:
-            return 'white'
+            return QColor(Qt.GlobalColor.white)
         elif piece_value.getPiece() == 2:
-            return 'black'
+            return QColor(Qt.GlobalColor.black)
         else:
-            return 'transparent'  # Adjust this based on your needs
+            return QColor(Qt.GlobalColor.transparent)  # Adjust this based on your needs
