@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QFrame
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF
-from PyQt6.QtGui import QPainter, QColor
+from PyQt6.QtGui import QPainter, QColor, QImage
 from PyQt6.QtTest import QTest
 from piece import Piece
 from PyQt6.QtGui import QPainter, QBrush
@@ -68,6 +68,9 @@ class Board(QFrame):  # base the board on a QFrame widget
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
         painter = QPainter(self)
+        board_image = QImage("./assets/light-wooden-background.png")  # Replace "path_to_your_board_image" with the image file path
+        painter.drawImage(self.contentsRect(), board_image)
+        self.drawPieces(painter)  # Draw pieces on top of the background
         self.drawBoardSquares(painter)
         self.drawPieces(painter)
 
@@ -87,23 +90,20 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def drawBoardSquares(self, painter):
         '''draw all the square on the board'''
-        # TODO set the default colour of the brush
         self.brush = QBrush(Qt.BrushStyle.SolidPattern)
-        self.brush.setColor(Qt.GlobalColor.lightGray)
+        self.brush.setColor(Qt.GlobalColor.transparent)
         painter.setBrush(self.brush)
+        painter.setPen(Qt.GlobalColor.black)  # Set the pen color to black for borders
         for row in range(0, Board.boardHeight):
             for col in range(0, Board.boardWidth):
                 painter.save()
-                colTransformation = self.squareWidth() * col  # TODO set this value equal the transformation in the column direction
-                rowTransformation = self.squareHeight() * row  # TODO set this value equal the transformation in the row direction
+                colTransformation = self.squareWidth() * col
+                rowTransformation = self.squareHeight() * row
                 painter.translate(colTransformation, rowTransformation)
-                painter.fillRect(col, row, int(self.squareWidth()), int(self.squareHeight()),self.brush)  # TODO provide the required arguments
+                # Fill the squares with transparent color and black borders
+                painter.fillRect(col, row, int(self.squareWidth()), int(self.squareHeight()), self.brush)
+                painter.drawRect(col, row, int(self.squareWidth()), int(self.squareHeight()))  # Draw black borders
                 painter.restore()
-                if self.brush.color() == Qt.GlobalColor.lightGray:
-                    self.brush.setColor(Qt.GlobalColor.darkGray)
-                else:
-                    self.brush.setColor(Qt.GlobalColor.lightGray)
-                # TODO change the colour of the brush so that a checkered board is drawn
 
     def drawPieces(self, painter):
         '''draw the pieces on the board'''

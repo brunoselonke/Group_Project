@@ -12,18 +12,18 @@ class Go(QMainWindow):
     def getBoard(self):
         return self.board
 
-    def getScoreBoard(self):
-        return self.scoreBoard
+    # def getScoreBoard(self):
+    #     return self.scoreBoard
 
     def initUI(self):
         '''initiates application UI'''
+        self.setFixedSize(900, 900)  # Set a fixed size for the window
         self.board = Board(self)
         self.setCentralWidget(self.board)
-        self.scoreBoard = ScoreBoard()
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.scoreBoard)
-        self.scoreBoard.make_connection(self.board)
+        # self.scoreBoard = ScoreBoard()
+##      self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.scoreBoard)
+        # self.scoreBoard.make_connection(self.board)
 
-        self.resize(700, 700)
         self.center()
         self.setWindowTitle('Go')
         self.show()
