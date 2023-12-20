@@ -9,6 +9,7 @@ class Board(QFrame):  # base the board on a QFrame widget
     updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
     clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
     boardSize = 7
+    updateBoardStateSignal = pyqtSignal(list)  # Define the signal for updating the board state
 
     # TODO set the board width and height to be square
     # TODO this needs updating
@@ -20,6 +21,18 @@ class Board(QFrame):  # base the board on a QFrame widget
     def __init__(self, parent):
         super().__init__(parent)
         self.initBoard()
+        self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)  # Connect the signal to the handler method
+
+
+    def handleBoardStateUpdate(self, updated_board_array):
+        '''Handle the updated board state'''
+
+        # You can perform any actions here based on the updated board state
+        # For example, print the updated board array
+        print("Updated Board State:")
+        for row in updated_board_array:
+            print(row)
+
 
     def initBoard(self):
         '''initiates board'''
@@ -83,10 +96,28 @@ class Board(QFrame):  # base the board on a QFrame widget
     def mousePressEvent(self, event):
         '''This event is automatically called when the mouse is pressed'''
 
-        click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
-        print("mousePressEvent() - " + click_loc)
+        # Convert mouse click event to row and column
+        col = int(event.position().x() // self.squareWidth())-1
+        row = int(event.position().y() // self.squareHeight())-1
+
+        # Ensure the click is within the board bounds
+        if 0 <= row < Board.boardHeight+1 and 0 <= col < Board.boardWidth+1:
+            # Get the Piece instance at the clicked position
+            clicked_piece = self.boardArray[row][col]
+
+            # Check if the clicked piece is not empty
+            if clicked_piece.getPiece() != 0:
+                # Update the color of the clicked piece (for example, change it to black)
+                clicked_piece.Status = Piece.Black
+
+                # Emit the signal with the updated board state
+                self.updateBoardStateSignal.emit(self.boardArray)
+
+                # Redraw the board
+                self.update()
 
         # Emit the signal with the click location
+        click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
         self.clickLocationSignal.emit(click_loc)
 
     def resetGame(self):
