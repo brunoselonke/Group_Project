@@ -1,9 +1,11 @@
 from PyQt6.QtWidgets import QFrame
-from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF
+from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
 from PyQt6.QtGui import QPainter, QColor, QImage, QPen
 from PyQt6.QtTest import QTest
 from piece import Piece
 from PyQt6.QtGui import QPainter, QBrush
+from PyQt6.QtMultimedia import QSoundEffect
+
 
 class Board(QFrame):  # base the board on a QFrame widget
     updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
@@ -96,6 +98,11 @@ class Board(QFrame):  # base the board on a QFrame widget
     def mousePressEvent(self, event):
         '''This event is automatically called when the mouse is pressed'''
 
+        # Initializing sound effect
+        self.piece_sound = QSoundEffect()
+        self.piece_sound.setSource(
+            QUrl.fromLocalFile("./assets/piecemove.wav"))
+
         # Convert mouse click event to row and column
         col = int(event.position().x() // self.squareWidth())-1
         row = int(event.position().y() // self.squareHeight())-1
@@ -109,6 +116,9 @@ class Board(QFrame):  # base the board on a QFrame widget
             if clicked_piece.getPiece() != 0:
                 # Update the color of the clicked piece (for example, change it to black)
                 clicked_piece.Status = Piece.Black
+
+                # Play sound when placing a piece
+                self.piece_sound.play()
 
                 # Emit the signal with the updated board state
                 self.updateBoardStateSignal.emit(self.boardArray)
