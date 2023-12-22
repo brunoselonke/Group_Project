@@ -23,6 +23,7 @@ class Board(QFrame):  # base the board on a QFrame widget
     def __init__(self, parent):
         super().__init__(parent)
         self.initBoard()
+        self.current_player = "Player One"
         self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)  # Connect the signal to the handler method
 
 
@@ -42,7 +43,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.isStarted = False      # game is not currently started
         self.start()                # start the game which will start the timer
         self.boardArray = []         # TODO - create a 2d int/Piece array to store the state of the game
-        self.boardArray = [[Piece(self,x,y) for x in range(self.boardHeight+1)] for y in range(self.boardWidth+1)]
+        self.boardArray = [[Piece(0,x,y) for x in range(self.boardHeight+1)] for y in range(self.boardWidth+1)]
                                         #+1 makes the pieces been drawn in the last column and line
         self.printBoardArray()      # TODO - uncomment this method after creating the array above
         self.margin = 100           #controls the margin between the board and the window
@@ -108,14 +109,21 @@ class Board(QFrame):  # base the board on a QFrame widget
         row = int(event.position().y() // self.squareHeight())-1
 
         # Ensure the click is within the board bounds
-        if 0 <= row < Board.boardHeight+1 and 0 <= col < Board.boardWidth+1:
+        if 0 <= row < Board.boardHeight + 1 and 0 <= col < Board.boardWidth + 1:
             # Get the Piece instance at the clicked position
             clicked_piece = self.boardArray[row][col]
 
             # Check if the clicked piece is not empty
-            if clicked_piece.getPiece() != 0:
-                # Update the color of the clicked piece (for example, change it to black)
-                clicked_piece.Status = Piece.Black
+            if clicked_piece.getPiece() == 0:
+                # Check whose turn it is
+                if self.current_player == "Player One":
+                    # Update the color of the clicked piece to black for Player One
+                    clicked_piece.Status = Piece.Black
+                    self.current_player = "Player Two"  # Change the turn to Player Two
+                else:
+                    # Update the color of the clicked piece to white for Player Two
+                    clicked_piece.Status = Piece.White
+                    self.current_player = "Player One"  # Change the turn back to Player One
 
                 # Play sound when placing a piece
                 self.piece_sound.play()
