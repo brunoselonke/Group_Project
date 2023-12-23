@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
 from PyQt6.QtGui import QPainter, QColor, QImage, QPen
 from PyQt6.QtTest import QTest
 from piece import Piece
+from game_logic import GameLogic
 from PyQt6.QtGui import QPainter, QBrush
 from PyQt6.QtMultimedia import QSoundEffect
 
@@ -24,7 +25,8 @@ class Board(QFrame):  # base the board on a QFrame widget
         super().__init__(parent)
         self.initBoard()
         self.current_player = "Player One"
-        self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)  # Connect the signal to the handler method
+        self.game_logic = GameLogic()
+        self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)
 
 
     def handleBoardStateUpdate(self, updated_board_array):
@@ -125,6 +127,9 @@ class Board(QFrame):  # base the board on a QFrame widget
                     clicked_piece.Status = Piece.White
                     self.current_player = "Player One"  # Change the turn back to Player One
 
+                # Call the method from GameLogic to update liberties
+                self.game_logic.updateLibertiesOnPiecePlacement(self.boardArray, row, col)
+                print(clicked_piece.getLiberties())
                 # Play sound when placing a piece
                 self.piece_sound.play()
 

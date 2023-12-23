@@ -18,8 +18,7 @@ class Piece(object):
         return self.Status
 
     def getLiberties(self): # return Liberties
-        self.libs = self.liberties
-        return self.libs
+        return self.liberties
 
     def setLiberties(self,liberties): # set Liberties
         self.liberties = liberties
