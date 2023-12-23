@@ -103,12 +103,11 @@ class Board(QFrame):  # base the board on a QFrame widget
 
         # Initializing sound effect
         self.piece_sound = QSoundEffect()
-        self.piece_sound.setSource(
-            QUrl.fromLocalFile("./assets/piecemove.wav"))
+        self.piece_sound.setSource(QUrl.fromLocalFile("./assets/piecemove.wav"))
 
         # Convert mouse click event to row and column
-        col = int(event.position().x() // self.squareWidth())-1
-        row = int(event.position().y() // self.squareHeight())-1
+        col = int(event.position().x() // self.squareWidth()) - 1
+        row = int(event.position().y() // self.squareHeight()) - 1
 
         # Ensure the click is within the board bounds
         if 0 <= row < Board.boardHeight + 1 and 0 <= col < Board.boardWidth + 1:
@@ -127,17 +126,16 @@ class Board(QFrame):  # base the board on a QFrame widget
                     clicked_piece.Status = Piece.White
                     self.current_player = "Player One"  # Change the turn back to Player One
 
-                # Call the method from GameLogic to update liberties
-                self.game_logic.updateLibertiesOnPiecePlacement(self.boardArray, row, col)
-                print(clicked_piece.getLiberties())
-                # Play sound when placing a piece
-                self.piece_sound.play()
+                # Check if the move is valid to prevent suicide
+                if self.game_logic.updateLibertiesOnPiecePlacement(self.boardArray, row, col):
+                    # Play sound when placing a piece
+                    self.piece_sound.play()
 
-                # Emit the signal with the updated board state
-                self.updateBoardStateSignal.emit(self.boardArray)
+                    # Emit the signal with the updated board state
+                    self.updateBoardStateSignal.emit(self.boardArray)
 
-                # Redraw the board
-                self.update()
+                    # Redraw the board
+                    self.update()
 
         # Emit the signal with the click location
         click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
