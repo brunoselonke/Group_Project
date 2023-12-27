@@ -103,6 +103,8 @@ class Board(QFrame):  # base the board on a QFrame widget
         # Initializing sound effect
         self.piece_sound = QSoundEffect()
         self.piece_sound.setSource(QUrl.fromLocalFile("./assets/piecemove.wav"))
+        self.invalid_sound = QSoundEffect()
+        self.invalid_sound.setSource(QUrl.fromLocalFile("./assets/invalid.wav"))
 
         # Convert mouse click event to row and column
         col = int(event.position().x() // self.squareWidth()) - 1
@@ -136,6 +138,14 @@ class Board(QFrame):  # base the board on a QFrame widget
 
                     # Redraw the board
                     self.update()
+                else:
+                    # Play a sound indicating an invalid move (suicide prevention)
+                    self.invalid_sound.play()
+                    # Reset the turn back to the current player after an invalid move
+                    if self.current_player == "Player One":
+                        self.current_player = "Player Two"
+                    else:
+                        self.current_player = "Player One"
 
         # Emit the signal with the click location
         click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
