@@ -1,7 +1,6 @@
-from PyQt6.QtWidgets import QFrame
+from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
-from PyQt6.QtGui import QPainter, QColor, QImage, QPen
-from PyQt6.QtTest import QTest
+from PyQt6.QtGui import QColor, QImage, QPen
 from piece import Piece
 from game_logic import GameLogic
 from PyQt6.QtGui import QPainter, QBrush
@@ -48,6 +47,26 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.margin = 100  # controls the margin between the board and the window
         self.piecesSize = 2.5  # controls pieces sizes, the smaller the number the bigger the piece
 
+        # Create a restart button
+        self.restartButton = QPushButton("Resign", self)
+        self.restartButton.clicked.connect(self.resetGame)
+
+        # Create a pass  button
+        self.passButton = QPushButton("Pass", self)
+        self.passButton.clicked.connect(self.passTurn)
+
+        # Create a layout for the board and the buttons
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(self.restartButton)
+        buttonLayout.addWidget(self.passButton)
+
+        mainLayout = QVBoxLayout(self)
+        mainLayout.addLayout(buttonLayout)
+        mainLayout.addWidget(self)
+        mainLayout.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
+
+        self.setLayout(mainLayout)
+
     def printBoardArray(self):
         '''prints the boardArray with black and white pieces'''
         print("boardArray:")
@@ -76,7 +95,6 @@ class Board(QFrame):  # base the board on a QFrame widget
     def start(self):
         '''starts game'''
         self.isStarted = True  # set the boolean which determines if the game has started to TRUE
-        self.resetGame()  # reset the game
         self.timer.start(self.timerSpeed, self)  # start the timer with the correct speed
         print("start () - timer is started")
 
@@ -161,10 +179,19 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def resetGame(self):
         '''clears pieces from the board'''
+        self.initBoard()
+        self.current_player = "Player One"
+        self.game_logic = GameLogic()
+        self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)
+        self.update()
         # TODO write code to reset game
 
-    def tryMove(self, newX, newY):
-        '''tries to move a piece'''
+    def passTurn(self):
+        print("Pass turn")
+        if self.current_player == "Player One":
+            self.current_player = "Player Two"
+        else:
+            self.current_player = "Player One"
 
     def drawBoardSquares(self, painter):
         '''draw all the square on the board'''
