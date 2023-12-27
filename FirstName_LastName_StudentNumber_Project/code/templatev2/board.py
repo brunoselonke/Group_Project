@@ -9,17 +9,17 @@ from PyQt6.QtMultimedia import QSoundEffect
 
 
 class Board(QFrame):  # base the board on a QFrame widget
-    updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
-    clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
-    boardSize = 7
+    updateTimerSignal = pyqtSignal(int)  # signal sent when timer is updated
+    clickLocationSignal = pyqtSignal(str)  # signal sent when there is a new click location
+    boardSize = 6
     updateBoardStateSignal = pyqtSignal(list)  # Define the signal for updating the board state
 
     # TODO set the board width and height to be square
     # TODO this needs updating
-    boardWidth  = boardSize     # board is 0 squares wide
+    boardWidth = boardSize  # board is 0 squares wide
     boardHeight = boardSize
-    timerSpeed  = 1000     # the timer updates every 1 millisecond
-    counter     = 10    # the number the counter will count down from
+    timerSpeed = 1000  # the timer updates every 1 millisecond
+    counter = 10  # the number the counter will count down from
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -27,7 +27,6 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.current_player = "Player One"
         self.game_logic = GameLogic()
         self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)
-
 
     def handleBoardStateUpdate(self, updated_board_array):
         '''Handle the updated board state'''
@@ -38,18 +37,17 @@ class Board(QFrame):  # base the board on a QFrame widget
         for row in updated_board_array:
             print(row)
 
-
     def initBoard(self):
         '''initiates board'''
         self.timer = QBasicTimer()  # create a timer for the game
-        self.isStarted = False      # game is not currently started
-        self.start()                # start the game which will start the timer
-        self.boardArray = []         # TODO - create a 2d int/Piece array to store the state of the game
-        self.boardArray = [[Piece(0,x,y) for x in range(self.boardHeight+1)] for y in range(self.boardWidth+1)]
-                                        #+1 makes the pieces been drawn in the last column and line
-        self.printBoardArray()      # TODO - uncomment this method after creating the array above
-        self.margin = 100           #controls the margin between the board and the window
-        self.piecesSize = 2.5       #controls pieces sizes, the smaller the number the bigger the piece
+        self.isStarted = False  # game is not currently started
+        self.start()  # start the game which will start the timer
+        self.boardArray = []  # TODO - create a 2d int/Piece array to store the state of the game
+        self.boardArray = [[Piece(0, x, y) for x in range(self.boardHeight + 1)] for y in range(self.boardWidth + 1)]
+        # +1 makes the pieces been drawn in the last column and line
+        self.printBoardArray()  # TODO - uncomment this method after creating the array above
+        self.margin = 100  # controls the margin between the board and the window
+        self.piecesSize = 2.5  # controls pieces sizes, the smaller the number the bigger the piece
 
     def printBoardArray(self):
         '''prints the boardArray in an attractive way'''
@@ -69,9 +67,9 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def start(self):
         '''starts game'''
-        self.isStarted = True                       # set the boolean which determines if the game has started to TRUE
-        self.resetGame()                            # reset the game
-        self.timer.start(self.timerSpeed, self)     # start the timer with the correct speed
+        self.isStarted = True  # set the boolean which determines if the game has started to TRUE
+        self.resetGame()  # reset the game
+        self.timer.start(self.timerSpeed, self)  # start the timer with the correct speed
         print("start () - timer is started")
 
     def timerEvent(self, event):
@@ -84,14 +82,15 @@ class Board(QFrame):  # base the board on a QFrame widget
             print('timerEvent()', self.counter)
             self.updateTimerSignal.emit(self.counter)
         else:
-            super(Board, self).timerEvent(event)      # if we do not handle an event we should pass it to the super
-                                                        # class for handling
+            super(Board, self).timerEvent(event)  # if we do not handle an event we should pass it to the super
+            # class for handling
 
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
         painter = QPainter(self)
         painter.translate(self.margin, self.margin)
-        board_image = QImage("./assets/light-wooden-background.png")  # Replace "path_to_your_board_image" with the image file path
+        board_image = QImage(
+            "./assets/light-wooden-background.png")  # Replace "path_to_your_board_image" with the image file path
         boardRect = self.contentsRect().adjusted(-self.margin, -self.margin, self.margin, self.margin)
         painter.drawImage(boardRect, board_image)
         self.drawPieces(painter)  # Draw pieces on top of the background
@@ -116,14 +115,12 @@ class Board(QFrame):  # base the board on a QFrame widget
 
             # Check if the clicked piece is not empty
             if clicked_piece.getPiece() == 0:
-                # Check whose turn it is
+                # Check whose turn it is and update the piece accordingly
                 if self.current_player == "Player One":
-                    # Update the color of the clicked piece to black for Player One
-                    clicked_piece.Status = Piece.Black
+                    clicked_piece.Status = Piece.Black  # Update the color of the clicked piece to black for Player One
                     self.current_player = "Player Two"  # Change the turn to Player Two
                 else:
-                    # Update the color of the clicked piece to white for Player Two
-                    clicked_piece.Status = Piece.White
+                    clicked_piece.Status = Piece.White  # Update the color of the clicked piece to white for Player Two
                     self.current_player = "Player One"  # Change the turn back to Player One
 
                 # Check if the move is valid to prevent suicide
@@ -133,6 +130,9 @@ class Board(QFrame):  # base the board on a QFrame widget
 
                     # Emit the signal with the updated board state
                     self.updateBoardStateSignal.emit(self.boardArray)
+
+                    # Capture stones after placement
+                    self.game_logic.captureStones(self.boardArray)
 
                     # Redraw the board
                     self.update()
@@ -169,7 +169,8 @@ class Board(QFrame):  # base the board on a QFrame widget
                 painter.translate(colTransformation, rowTransformation)
                 # Fill the squares with transparent color and black borders
                 painter.fillRect(col, row, int(self.squareWidth()), int(self.squareHeight()), self.brush)
-                painter.drawRect(col, row, int(self.squareWidth()),int(self.squareHeight()))  # Draw borders with the specified pen
+                painter.drawRect(col, row, int(self.squareWidth()),
+                                 int(self.squareHeight()))  # Draw borders with the specified pen
                 painter.restore()
 
     def drawPieces(self, painter):
@@ -199,5 +200,9 @@ class Board(QFrame):  # base the board on a QFrame widget
             return QColor(Qt.GlobalColor.white)
         elif piece_value.getPiece() == 2:
             return QColor(Qt.GlobalColor.black)
+        elif piece_value.getPiece() == 3:
+            return QColor(Qt.GlobalColor.transparent)
+        elif piece_value.getPiece() == 4:
+            return QColor(Qt.GlobalColor.transparent)
         else:
             return QColor(Qt.GlobalColor.transparent)  # Adjust this based on your needs

@@ -3,6 +3,8 @@ class Piece(object):
     NoPiece = 0
     White = 1
     Black = 2
+    WhiteCaptured = 3
+    BlackCaptured = 4
     Status = 0 #default to nopiece
     liberties = 0 #default no liberties
     x = -1
