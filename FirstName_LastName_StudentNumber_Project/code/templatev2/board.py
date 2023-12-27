@@ -17,7 +17,7 @@ class Board(QFrame):  # base the board on a QFrame widget
     # TODO this needs updating
     boardWidth = boardSize  # board is 0 squares wide
     boardHeight = boardSize
-    timerSpeed = 1000  # the timer updates every 1 millisecond
+    timerSpeed = 10000  # the timer updates every 1 millisecond
     counter = 10  # the number the counter will count down from
 
     def __init__(self, parent):
@@ -26,6 +26,8 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.current_player = "Player One"
         self.game_logic = GameLogic()
         self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)
+        self.pass_count_player_one = 0
+        self.pass_count_player_two = 0
 
     def handleBoardStateUpdate(self, updated_board_array):
         '''Handle the updated board state'''
@@ -206,6 +208,8 @@ class Board(QFrame):  # base the board on a QFrame widget
         # Emit the signal with the click location
         click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
         self.clickLocationSignal.emit(click_loc)
+        self.pass_count_player_one = 0
+        self.pass_count_player_two = 0
 
     def resetGame(self):
         '''clears pieces from the board'''
@@ -219,9 +223,18 @@ class Board(QFrame):  # base the board on a QFrame widget
     def passTurn(self):
         print("Pass turn")
         if self.current_player == "Player One":
+            self.pass_count_player_one += 1
             self.current_player = "Player Two"
         else:
+            self.pass_count_player_two += 1
             self.current_player = "Player One"
+
+        # Check if both players have passed consecutively twice
+        if self.pass_count_player_one >= 2 and self.pass_count_player_two >= 2:
+            print("Game over - Two consecutive passes from each player")
+            #call function to calculate points and display
+            self.resetGame()
+
 
     def drawBoardSquares(self, painter):
         '''draw all the square on the board'''
