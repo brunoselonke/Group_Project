@@ -34,8 +34,7 @@ class Board(QFrame):  # base the board on a QFrame widget
         # You can perform any actions here based on the updated board state
         # For example, print the updated board array
         print("Updated Board State:")
-        for row in updated_board_array:
-            print(row)
+        self.printBoardArray()
 
     def initBoard(self):
         '''initiates board'''
@@ -50,9 +49,18 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.piecesSize = 2.5  # controls pieces sizes, the smaller the number the bigger the piece
 
     def printBoardArray(self):
-        '''prints the boardArray in an attractive way'''
+        '''prints the boardArray with black and white pieces'''
         print("boardArray:")
-        print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in self.boardArray]))
+        for row in self.boardArray:
+            row_str = ""
+            for cell in row:
+                if cell.getPiece() == Piece.Black:
+                    row_str += "B "
+                elif cell.getPiece() == Piece.White:
+                    row_str += "W "
+                else:
+                    row_str += "- "
+            print(row_str)
 
     def mousePosToColRow(self, event):
         '''convert the mouse click event to a row and column'''
