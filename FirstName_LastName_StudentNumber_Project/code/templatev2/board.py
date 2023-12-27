@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
 from PyQt6.QtGui import QColor, QImage, QPen
 from piece import Piece
@@ -50,22 +50,52 @@ class Board(QFrame):  # base the board on a QFrame widget
         # Create a restart button
         self.restartButton = QPushButton("Resign", self)
         self.restartButton.clicked.connect(self.resetGame)
+        self.applyButtonStyle(self.restartButton)
+        self.restartButton.setFixedSize(100,50)
+
 
         # Create a pass  button
         self.passButton = QPushButton("Pass", self)
         self.passButton.clicked.connect(self.passTurn)
+        self.applyButtonStyle(self.passButton)
+        self.passButton.setFixedSize(100,50)
+
+        #increase the font size
+        font = self.restartButton.font()
+        font.setPointSize(font.pointSize() * 2)
+        self.restartButton.setFont(font)
+        self.passButton.setFont(font)
 
         # Create a layout for the board and the buttons
         buttonLayout = QHBoxLayout()
         buttonLayout.addWidget(self.restartButton)
+        buttonLayout.addSpacing(125)
         buttonLayout.addWidget(self.passButton)
+
 
         mainLayout = QVBoxLayout(self)
         mainLayout.addLayout(buttonLayout)
+        mainLayout.addSpacing(12)
         mainLayout.addWidget(self)
         mainLayout.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
 
         self.setLayout(mainLayout)
+
+    def applyButtonStyle(self, button):
+        button.setStyleSheet(
+            "QPushButton {"
+            "   background-color: #F5F5DC;"
+            "   color: black;"
+            "   border-radius: 5px;"
+            "   border: 2px solid #A52A2A;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #D2B48C;"  # Lighten the color on hover
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #CD853F;"  # Darken the color when pressed
+            "}"
+        )
 
     def printBoardArray(self):
         '''prints the boardArray with black and white pieces'''
