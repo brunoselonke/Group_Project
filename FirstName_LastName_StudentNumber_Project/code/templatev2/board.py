@@ -1,31 +1,33 @@
-from PyQt6.QtWidgets import QFrame
+from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
-from PyQt6.QtGui import QPainter, QColor, QImage, QPen
-from PyQt6.QtTest import QTest
+from PyQt6.QtGui import QColor, QImage, QPen
 from piece import Piece
+from game_logic import GameLogic
 from PyQt6.QtGui import QPainter, QBrush
 from PyQt6.QtMultimedia import QSoundEffect
 
 
 class Board(QFrame):  # base the board on a QFrame widget
-    updateTimerSignal = pyqtSignal(int) # signal sent when timer is updated
-    clickLocationSignal = pyqtSignal(str) # signal sent when there is a new click location
-    boardSize = 7
+    updateTimerSignal = pyqtSignal(int)  # signal sent when timer is updated
+    clickLocationSignal = pyqtSignal(str)  # signal sent when there is a new click location
+    boardSize = 6
     updateBoardStateSignal = pyqtSignal(list)  # Define the signal for updating the board state
 
     # TODO set the board width and height to be square
     # TODO this needs updating
-    boardWidth  = boardSize     # board is 0 squares wide
+    boardWidth = boardSize  # board is 0 squares wide
     boardHeight = boardSize
-    timerSpeed  = 1000     # the timer updates every 1 millisecond
-    counter     = 10    # the number the counter will count down from
+    timerSpeed = 10000  # the timer updates every 1 millisecond
+    counter = 10  # the number the counter will count down from
 
     def __init__(self, parent):
         super().__init__(parent)
         self.initBoard()
         self.current_player = "Player One"
-        self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)  # Connect the signal to the handler method
-
+        self.game_logic = GameLogic()
+        self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)
+        self.pass_count_player_one = 0
+        self.pass_count_player_two = 0
 
     def handleBoardStateUpdate(self, updated_board_array):
         '''Handle the updated board state'''
@@ -33,26 +35,83 @@ class Board(QFrame):  # base the board on a QFrame widget
         # You can perform any actions here based on the updated board state
         # For example, print the updated board array
         print("Updated Board State:")
-        for row in updated_board_array:
-            print(row)
-
+        self.printBoardArray()
 
     def initBoard(self):
         '''initiates board'''
         self.timer = QBasicTimer()  # create a timer for the game
-        self.isStarted = False      # game is not currently started
-        self.start()                # start the game which will start the timer
-        self.boardArray = []         # TODO - create a 2d int/Piece array to store the state of the game
-        self.boardArray = [[Piece(0,x,y) for x in range(self.boardHeight+1)] for y in range(self.boardWidth+1)]
-                                        #+1 makes the pieces been drawn in the last column and line
-        self.printBoardArray()      # TODO - uncomment this method after creating the array above
-        self.margin = 100           #controls the margin between the board and the window
-        self.piecesSize = 2.5       #controls pieces sizes, the smaller the number the bigger the piece
+        self.isStarted = False  # game is not currently started
+        self.start()  # start the game which will start the timer
+        self.boardArray = []  # TODO - create a 2d int/Piece array to store the state of the game
+        self.boardArray = [[Piece(0, x, y) for x in range(self.boardHeight + 1)] for y in range(self.boardWidth + 1)]
+        # +1 makes the pieces been drawn in the last column and line
+        self.printBoardArray()  # TODO - uncomment this method after creating the array above
+        self.margin = 100  # controls the margin between the board and the window
+        self.piecesSize = 2.5  # controls pieces sizes, the smaller the number the bigger the piece
+
+        # Create a restart button
+        self.restartButton = QPushButton("Resign", self)
+        self.restartButton.clicked.connect(self.resetGame)
+        self.applyButtonStyle(self.restartButton)
+        self.restartButton.setFixedSize(100,50)
+
+
+        # Create a pass  button
+        self.passButton = QPushButton("Pass", self)
+        self.passButton.clicked.connect(self.passTurn)
+        self.applyButtonStyle(self.passButton)
+        self.passButton.setFixedSize(100,50)
+
+        #increase the font size
+        font = self.restartButton.font()
+        font.setPointSize(font.pointSize() * 2)
+        self.restartButton.setFont(font)
+        self.passButton.setFont(font)
+
+        # Create a layout for the board and the buttons
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(self.restartButton)
+        buttonLayout.addSpacing(125)
+        buttonLayout.addWidget(self.passButton)
+
+
+        mainLayout = QVBoxLayout(self)
+        mainLayout.addLayout(buttonLayout)
+        mainLayout.addSpacing(12)
+        mainLayout.addWidget(self)
+        mainLayout.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
+
+        self.setLayout(mainLayout)
+
+    def applyButtonStyle(self, button):
+        button.setStyleSheet(
+            "QPushButton {"
+            "   background-color: #F5F5DC;"
+            "   color: black;"
+            "   border-radius: 5px;"
+            "   border: 2px solid #A52A2A;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: #D2B48C;"  # Lighten the color on hover
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: #CD853F;"  # Darken the color when pressed
+            "}"
+        )
 
     def printBoardArray(self):
-        '''prints the boardArray in an attractive way'''
+        '''prints the boardArray with black and white pieces'''
         print("boardArray:")
-        print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in self.boardArray]))
+        for row in self.boardArray:
+            row_str = ""
+            for cell in row:
+                if cell.getPiece() == Piece.Black:
+                    row_str += "B "
+                elif cell.getPiece() == Piece.White:
+                    row_str += "W "
+                else:
+                    row_str += "- "
+            print(row_str)
 
     def mousePosToColRow(self, event):
         '''convert the mouse click event to a row and column'''
@@ -67,9 +126,8 @@ class Board(QFrame):  # base the board on a QFrame widget
 
     def start(self):
         '''starts game'''
-        self.isStarted = True                       # set the boolean which determines if the game has started to TRUE
-        self.resetGame()                            # reset the game
-        self.timer.start(self.timerSpeed, self)     # start the timer with the correct speed
+        self.isStarted = True  # set the boolean which determines if the game has started to TRUE
+        self.timer.start(self.timerSpeed, self)  # start the timer with the correct speed
         print("start () - timer is started")
 
     def timerEvent(self, event):
@@ -82,14 +140,15 @@ class Board(QFrame):  # base the board on a QFrame widget
             print('timerEvent()', self.counter)
             self.updateTimerSignal.emit(self.counter)
         else:
-            super(Board, self).timerEvent(event)      # if we do not handle an event we should pass it to the super
-                                                        # class for handling
+            super(Board, self).timerEvent(event)  # if we do not handle an event we should pass it to the super
+            # class for handling
 
     def paintEvent(self, event):
         '''paints the board and the pieces of the game'''
         painter = QPainter(self)
         painter.translate(self.margin, self.margin)
-        board_image = QImage("./assets/light-wooden-background.png")  # Replace "path_to_your_board_image" with the image file path
+        board_image = QImage(
+            "./assets/light-wooden-background.png")  # Replace "path_to_your_board_image" with the image file path
         boardRect = self.contentsRect().adjusted(-self.margin, -self.margin, self.margin, self.margin)
         painter.drawImage(boardRect, board_image)
         self.drawPieces(painter)  # Draw pieces on top of the background
@@ -101,12 +160,13 @@ class Board(QFrame):  # base the board on a QFrame widget
 
         # Initializing sound effect
         self.piece_sound = QSoundEffect()
-        self.piece_sound.setSource(
-            QUrl.fromLocalFile("./assets/piecemove.wav"))
+        self.piece_sound.setSource(QUrl.fromLocalFile("./assets/piecemove.wav"))
+        self.invalid_sound = QSoundEffect()
+        self.invalid_sound.setSource(QUrl.fromLocalFile("./assets/invalid.wav"))
 
         # Convert mouse click event to row and column
-        col = int(event.position().x() // self.squareWidth())-1
-        row = int(event.position().y() // self.squareHeight())-1
+        col = int(event.position().x() // self.squareWidth()) - 1
+        row = int(event.position().y() // self.squareHeight()) - 1
 
         # Ensure the click is within the board bounds
         if 0 <= row < Board.boardHeight + 1 and 0 <= col < Board.boardWidth + 1:
@@ -115,35 +175,66 @@ class Board(QFrame):  # base the board on a QFrame widget
 
             # Check if the clicked piece is not empty
             if clicked_piece.getPiece() == 0:
-                # Check whose turn it is
+                # Check whose turn it is and update the piece accordingly
                 if self.current_player == "Player One":
-                    # Update the color of the clicked piece to black for Player One
-                    clicked_piece.Status = Piece.Black
+                    clicked_piece.Status = Piece.Black  # Update the color of the clicked piece to black for Player One
                     self.current_player = "Player Two"  # Change the turn to Player Two
                 else:
-                    # Update the color of the clicked piece to white for Player Two
-                    clicked_piece.Status = Piece.White
+                    clicked_piece.Status = Piece.White  # Update the color of the clicked piece to white for Player Two
                     self.current_player = "Player One"  # Change the turn back to Player One
 
-                # Play sound when placing a piece
-                self.piece_sound.play()
+                # Check if the move is valid to prevent suicide
+                if self.game_logic.updateLibertiesOnPiecePlacement(self.boardArray, row, col):
+                    # Play sound when placing a piece
+                    self.piece_sound.play()
 
-                # Emit the signal with the updated board state
-                self.updateBoardStateSignal.emit(self.boardArray)
+                    # Emit the signal with the updated board state
+                    self.updateBoardStateSignal.emit(self.boardArray)
 
-                # Redraw the board
-                self.update()
+                    # Capture stones after placement
+                    self.game_logic.captureStones(self.boardArray)
+
+                    # Redraw the board
+                    self.update()
+                else:
+                    # Play a sound indicating an invalid move (suicide prevention)
+                    self.invalid_sound.play()
+                    # Reset the turn back to the current player after an invalid move
+                    if self.current_player == "Player One":
+                        self.current_player = "Player Two"
+                    else:
+                        self.current_player = "Player One"
 
         # Emit the signal with the click location
         click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
         self.clickLocationSignal.emit(click_loc)
+        self.pass_count_player_one = 0
+        self.pass_count_player_two = 0
 
     def resetGame(self):
         '''clears pieces from the board'''
+        self.initBoard()
+        self.current_player = "Player One"
+        self.game_logic = GameLogic()
+        self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)
+        self.update()
         # TODO write code to reset game
 
-    def tryMove(self, newX, newY):
-        '''tries to move a piece'''
+    def passTurn(self):
+        print("Pass turn")
+        if self.current_player == "Player One":
+            self.pass_count_player_one += 1
+            self.current_player = "Player Two"
+        else:
+            self.pass_count_player_two += 1
+            self.current_player = "Player One"
+
+        # Check if both players have passed consecutively twice
+        if self.pass_count_player_one >= 2 and self.pass_count_player_two >= 2:
+            print("Game over - Two consecutive passes from each player")
+            #call function to calculate points and display
+            self.resetGame()
+
 
     def drawBoardSquares(self, painter):
         '''draw all the square on the board'''
@@ -166,7 +257,8 @@ class Board(QFrame):  # base the board on a QFrame widget
                 painter.translate(colTransformation, rowTransformation)
                 # Fill the squares with transparent color and black borders
                 painter.fillRect(col, row, int(self.squareWidth()), int(self.squareHeight()), self.brush)
-                painter.drawRect(col, row, int(self.squareWidth()),int(self.squareHeight()))  # Draw borders with the specified pen
+                painter.drawRect(col, row, int(self.squareWidth()),
+                                 int(self.squareHeight()))  # Draw borders with the specified pen
                 painter.restore()
 
     def drawPieces(self, painter):
@@ -196,5 +288,9 @@ class Board(QFrame):  # base the board on a QFrame widget
             return QColor(Qt.GlobalColor.white)
         elif piece_value.getPiece() == 2:
             return QColor(Qt.GlobalColor.black)
+        elif piece_value.getPiece() == 3:
+            return QColor(Qt.GlobalColor.transparent)
+        elif piece_value.getPiece() == 4:
+            return QColor(Qt.GlobalColor.transparent)
         else:
             return QColor(Qt.GlobalColor.transparent)  # Adjust this based on your needs

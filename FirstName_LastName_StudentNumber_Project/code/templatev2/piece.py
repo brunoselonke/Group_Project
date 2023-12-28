@@ -3,6 +3,8 @@ class Piece(object):
     NoPiece = 0
     White = 1
     Black = 2
+    WhiteCaptured = 3
+    BlackCaptured = 4
     Status = 0 #default to nopiece
     liberties = 0 #default no liberties
     x = -1
@@ -18,8 +20,7 @@ class Piece(object):
         return self.Status
 
     def getLiberties(self): # return Liberties
-        self.libs = self.liberties
-        return self.libs
+        return self.liberties
 
     def setLiberties(self,liberties): # set Liberties
         self.liberties = liberties
