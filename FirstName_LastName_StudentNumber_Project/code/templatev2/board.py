@@ -174,7 +174,8 @@ class Board(QFrame):  # base the board on a QFrame widget
             clicked_piece = self.boardArray[row][col]
 
             # Check if the clicked piece is not empty
-            if clicked_piece.getPiece() == 0:
+            if clicked_piece.getPiece() == 0 and self.game_logic.updateLibertiesOnPiecePlacement(self.boardArray, row,
+                                                                                                 col):
                 # Check whose turn it is and update the piece accordingly
                 if self.current_player == "Player One":
                     clicked_piece.Status = Piece.Black  # Update the color of the clicked piece to black for Player One
@@ -183,27 +184,21 @@ class Board(QFrame):  # base the board on a QFrame widget
                     clicked_piece.Status = Piece.White  # Update the color of the clicked piece to white for Player Two
                     self.current_player = "Player One"  # Change the turn back to Player One
 
-                # Check if the move is valid to prevent suicide
-                if self.game_logic.updateLibertiesOnPiecePlacement(self.boardArray, row, col):
-                    # Play sound when placing a piece
-                    self.piece_sound.play()
+                # Play sound when placing a piece
+                self.piece_sound.play()
 
-                    # Emit the signal with the updated board state
-                    self.updateBoardStateSignal.emit(self.boardArray)
+                # Emit the signal with the updated board state
+                self.updateBoardStateSignal.emit(self.boardArray)
 
-                    # Capture stones after placement
-                    self.game_logic.captureStones(self.boardArray)
+                # Capture stones after placement
+                self.game_logic.captureStones(self.boardArray)
 
-                    # Redraw the board
-                    self.update()
-                else:
-                    # Play a sound indicating an invalid move (suicide prevention)
-                    self.invalid_sound.play()
-                    # Reset the turn back to the current player after an invalid move
-                    if self.current_player == "Player One":
-                        self.current_player = "Player Two"
-                    else:
-                        self.current_player = "Player One"
+                # Redraw the board
+                self.update()
+
+            else:
+                # Play a sound indicating an invalid move (suicide prevention)
+                self.invalid_sound.play()
 
         # Emit the signal with the click location
         click_loc = "Click location [" + str(event.position().x()) + "," + str(event.position().y()) + "]"
