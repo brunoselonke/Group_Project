@@ -96,3 +96,46 @@ class GameLogic:
 
                 if neighboring_stone.getPiece() == color and (new_row, new_col) not in visited:
                     self.updateCapturedStones(board, new_row, new_col, color, visited)
+
+    def calculatePoints(self, board):
+        # Initialize point counters for each player
+        points_player_one = 0
+        points_player_two = 0
+
+        # Iterate through the board to count territory and captured stones
+        for row in range(len(board)):
+            for col in range(len(board[0])):
+                current_stone = board[row][col]
+
+                if current_stone.getPiece() == Piece.White:
+                    points_player_one += 1
+                elif current_stone.getPiece() == Piece.Black:
+                    points_player_two += 1
+                elif current_stone.getPiece() == Piece.WhiteCaptured:
+                    points_player_two += 1
+                elif current_stone.getPiece() == Piece.BlackCaptured:
+                    points_player_one += 1
+                else:
+                    # Check if the empty intersection is surrounded by a single color
+                    surrounding_colors = set()
+
+                    for dr, dc in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                        new_row, new_col = row + dr, col + dc
+
+                        if 0 <= new_row < len(board) and 0 <= new_col < len(board[0]):
+                            neighboring_stone = board[new_row][new_col]
+                            surrounding_colors.add(neighboring_stone.getPiece())
+
+                    # If the empty intersection is surrounded by a single color, add to territory
+                    if len(surrounding_colors) == 1:
+                        territory_color = surrounding_colors.pop()
+                        if territory_color == Piece.White:
+                            points_player_one += 1
+                        elif territory_color == Piece.Black:
+                            points_player_two += 1
+
+        # Print or use the points for further processing
+        print("Player One Points:", points_player_one)
+        print("Player Two Points:", points_player_two)
+
+        return points_player_one, points_player_two
