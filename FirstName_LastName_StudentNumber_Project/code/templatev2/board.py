@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy
+from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy, QMessageBox
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
-from PyQt6.QtGui import QColor, QImage, QPen
+from PyQt6.QtGui import QColor, QImage, QPen, QIcon
 from piece import Piece
 from game_logic import GameLogic
 from PyQt6.QtGui import QPainter, QBrush
@@ -46,8 +46,8 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.boardArray = [[Piece(0, x, y) for x in range(self.boardHeight + 1)] for y in range(self.boardWidth + 1)]
         # +1 makes the pieces been drawn in the last column and line
         self.printBoardArray()  # TODO - uncomment this method after creating the array above
-        self.margin = 100  # controls the margin between the board and the window
-        self.piecesSize = 2.5  # controls pieces sizes, the smaller the number the bigger the piece
+        self.margin = 120  # controls the margin between the board and the window
+        self.piecesSize = 2.8  # controls pieces sizes, the smaller the number the bigger the piece
 
         # Create a restart button
         self.restartButton = QPushButton("Resign", self)
@@ -224,10 +224,13 @@ class Board(QFrame):  # base the board on a QFrame widget
             self.pass_count_player_two += 1
             self.current_player = "Player One"
 
+        self.update()
         # Check if both players have passed consecutively twice
         if self.pass_count_player_one >= 2 and self.pass_count_player_two >= 2:
             print("Game over - Two consecutive passes from each player")
-            #call function to calculate points and display
+            # Calculate points and show notification
+            points_player_one, points_player_two = self.game_logic.calculatePoints(self.boardArray)
+            self.showGameEndNotification(points_player_one, points_player_two)
             self.resetGame()
 
 
@@ -289,3 +292,26 @@ class Board(QFrame):  # base the board on a QFrame widget
             return QColor(Qt.GlobalColor.transparent)
         else:
             return QColor(Qt.GlobalColor.transparent)  # Adjust this based on your needs
+
+    def showGameEndNotification(self, points_player_one, points_player_two):
+        message = f"Game Finished!\n\nPlayer One Points(Black): {points_player_one}\nPlayer Two Points(White): {points_player_two}"
+
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("Game Finished!")
+
+        # Set a custom icon (you can replace 'path/to/your/icon.png' with the actual path to your icon file)
+        icon = QIcon('path/to/your/icon.png')
+        msg_box.setWindowIcon(icon)
+
+        # Set a custom style sheet for a more appealing appearance
+        msg_box.setStyleSheet("""
+            QMessageBox {
+                background-color: #f0f0f0;
+            }
+            QLabel {
+                font-size: 14px;
+            }
+        """)
+
+        msg_box.setText(message)
+        msg_box.exec()
