@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout, QSize
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
 from PyQt6.QtGui import QColor, QImage, QPen
 from piece import Piece
+from score_board import ScoreBoard
 from game_logic import GameLogic
 from PyQt6.QtGui import QPainter, QBrush
 from PyQt6.QtMultimedia import QSoundEffect
@@ -62,17 +63,26 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.applyButtonStyle(self.passButton)
         self.passButton.setFixedSize(100,50)
 
+        # Create a button to open the ScoreBoard
+        self.scoreboard_button = QPushButton("Stats", self)
+        self.scoreboard_button.clicked.connect(self.openScoreBoard)
+        self.applyButtonStyle(self.scoreboard_button)
+        self.scoreboard_button.setFixedSize(100, 50)
+
         #increase the font size
         font = self.restartButton.font()
         font.setPointSize(font.pointSize() * 2)
         self.restartButton.setFont(font)
         self.passButton.setFont(font)
+        self.scoreboard_button.setFont(font)
 
         # Create a layout for the board and the buttons
         buttonLayout = QHBoxLayout()
         buttonLayout.addWidget(self.restartButton)
         buttonLayout.addSpacing(125)
         buttonLayout.addWidget(self.passButton)
+        buttonLayout.addSpacing(125)
+        buttonLayout.addWidget(self.scoreboard_button)
 
 
         mainLayout = QVBoxLayout(self)
@@ -112,6 +122,30 @@ class Board(QFrame):  # base the board on a QFrame widget
                 else:
                     row_str += "- "
             print(row_str)
+
+    def countPrisoners(self):
+        '''Count the number of captured pieces for both players'''
+        white_prisoners = 0
+        black_prisoners = 0
+
+        for row in self.boardArray:
+            for cell in row:
+                if cell.getPiece() == Piece.BlackCaptured:
+                    white_prisoners += 1
+                elif cell.getPiece() == Piece.WhiteCaptured:
+                    black_prisoners += 1
+
+        return white_prisoners, black_prisoners
+
+    def openScoreBoard(self):
+        # Get the stats from the board
+        white_prisoners, black_prisoners = self.countPrisoners()
+        current_player = self.current_player
+
+        # Create the ScoreBoard dialog and display it
+        self.scoreBoard = ScoreBoard()
+        self.scoreBoard.updateStats(current_player, white_prisoners, black_prisoners)
+        self.scoreBoard.exec()
 
     def mousePosToColRow(self, event):
         '''convert the mouse click event to a row and column'''
