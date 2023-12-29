@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy, QMessageBox
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
-from PyQt6.QtGui import QColor, QImage, QPen
+from PyQt6.QtGui import QColor, QImage, QPen, QIcon
 from piece import Piece
 from game_logic import GameLogic
 from PyQt6.QtGui import QPainter, QBrush
@@ -229,6 +229,7 @@ class Board(QFrame):  # base the board on a QFrame widget
             self.pass_count_player_two += 1
             self.current_player = "Player One"
 
+        self.update()
         # Check if both players have passed consecutively twice
         if self.pass_count_player_one >= 2 and self.pass_count_player_two >= 2:
             print("Game over - Two consecutive passes from each player")
@@ -302,5 +303,20 @@ class Board(QFrame):  # base the board on a QFrame widget
 
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Game Finished!")
+
+        # Set a custom icon (you can replace 'path/to/your/icon.png' with the actual path to your icon file)
+        icon = QIcon('path/to/your/icon.png')
+        msg_box.setWindowIcon(icon)
+
+        # Set a custom style sheet for a more appealing appearance
+        msg_box.setStyleSheet("""
+            QMessageBox {
+                background-color: #f0f0f0;
+            }
+            QLabel {
+                font-size: 14px;
+            }
+        """)
+
         msg_box.setText(message)
         msg_box.exec()

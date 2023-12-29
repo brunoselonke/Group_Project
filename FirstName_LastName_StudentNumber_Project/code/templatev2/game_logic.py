@@ -61,7 +61,7 @@ class GameLogic:
                 if 0 <= new_r < len(board) and 0 <= new_c < len(board[0]):
                     neighbor = board[new_r][new_c]
 
-                    if neighbor.getPiece() == 0:
+                    if neighbor.getPiece() == 0 or neighbor.getPiece() ==3 or neighbor.getPiece()==4:
                         liberties += 1
                     elif neighbor.getPiece() == color and (new_r, new_c) not in visited:
                         stack.append((new_r, new_c))
@@ -70,7 +70,6 @@ class GameLogic:
         return liberties  # Return the calculated liberties count
 
     def captureStones(self, board):
-        directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
         visited = set()
 
         for row in range(len(board)):
@@ -78,7 +77,11 @@ class GameLogic:
                 current_stone = board[row][col]
 
                 # Check if the stone has zero liberties and is not already captured
-                if current_stone.getPiece() != Piece.NoPiece and current_stone.getPiece() not in [Piece.WhiteCaptured, Piece.BlackCaptured] and current_stone.getLiberties() == 0:
+                if (
+                        current_stone.getPiece() != Piece.NoPiece
+                        and current_stone.getPiece() not in [Piece.WhiteCaptured, Piece.BlackCaptured]
+                        and current_stone.getLiberties() == 0
+                ):
                     color = current_stone.getPiece()
 
                     # Capture stones recursively for each stone with zero liberties
@@ -95,6 +98,9 @@ class GameLogic:
         current_stone = board[row][col]
         current_stone.Status = Piece.WhiteCaptured if color == Piece.White else Piece.BlackCaptured
 
+        # Update liberties for the current stone
+        self.calculateLiberties(board, row, col)
+
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
 
@@ -102,6 +108,7 @@ class GameLogic:
                 neighboring_stone = board[new_row][new_col]
 
                 if neighboring_stone.getPiece() == color and (new_row, new_col) not in visited:
+                    # Update liberties for the neighboring stone
                     self.updateCapturedStones(board, new_row, new_col, color, visited)
 
     def calculatePoints(self, board):
@@ -114,14 +121,16 @@ class GameLogic:
             for col in range(len(board[0])):
                 current_stone = board[row][col]
 
-                if current_stone.getPiece() == Piece.White:
+                if current_stone.getPiece() == Piece.Black:
                     points_player_one += 1
-                elif current_stone.getPiece() == Piece.Black:
+                elif current_stone.getPiece() == Piece.White:
                     points_player_two += 1
                 elif current_stone.getPiece() == Piece.WhiteCaptured:
-                    points_player_two += 1
-                elif current_stone.getPiece() == Piece.BlackCaptured:
                     points_player_one += 1
+                    points_player_two -= 1
+                elif current_stone.getPiece() == Piece.BlackCaptured:
+                    points_player_two += 1
+                    points_player_one -= 1
                 else:
                     # Check if the empty intersection is surrounded by a single color
                     surrounding_colors = set()
