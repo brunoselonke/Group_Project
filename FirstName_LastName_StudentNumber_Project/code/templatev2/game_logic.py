@@ -6,6 +6,9 @@ class GameLogic:
     def updateLibertiesOnPiecePlacement(self, board, row, col):
         # Get the stone that was just placed
         placed_stone = board[row][col]
+        self.current_color = placed_stone.getPiece()
+        self.neighboring_color = self.getNeighboringColor(board, row, col)
+
 
         # Define the directions to check: left, right, top, bottom
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
@@ -25,7 +28,10 @@ class GameLogic:
 
         # Check if placing the stone results in immediate loss of liberties
         if self.calculateLiberties(board, row, col) == 0:
-            return False  # Placement results in suicide, disallow it
+            if self.current_color == self.neighboring_color:
+                return True
+            else:
+                return False  # Placement results in suicide, disallow it
 
         # Update the liberties of the placed stone
         self.calculateLiberties(board, row, col)
@@ -78,6 +84,7 @@ class GameLogic:
                     # Capture stones recursively for each stone with zero liberties
                     if (row, col) not in visited:
                         self.updateCapturedStones(board, row, col, color, visited)
+
 
     # Helper method to update captured stones recursively
     def updateCapturedStones(self, board, row, col, color, visited):
@@ -139,3 +146,26 @@ class GameLogic:
         print("Player Two Points:", points_player_two)
 
         return points_player_one, points_player_two
+
+    # Helper method to get the neighboring color of a position on the board
+    def getNeighboringColor(self, board, row, col):
+        # Define the directions to check: left, right, top, bottom
+        directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+
+        neighboring_colors = set()
+
+        for dr, dc in directions:
+            new_row, new_col = row + dr, col + dc
+
+            # Ensure the new position is within the board boundaries
+            if 0 <= new_row < len(board) and 0 <= new_col < len(board[0]):
+                neighboring_stone = board[new_row][new_col]
+
+                # If the neighboring position contains a stone
+                if neighboring_stone.getPiece() != 0:
+                    neighboring_colors.add(neighboring_stone.getPiece())
+
+        if len(neighboring_colors) >= 1:
+            return neighboring_colors.pop()
+        else:
+            return None  # Multiple neighboring colors or no neighboring colors
