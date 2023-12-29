@@ -39,6 +39,12 @@ class Go(QMainWindow):
         gameMenu = mainMenu.addMenu("Game Menu")
         helpMenu = mainMenu.addMenu(" Help")
 
+        # Stats action setup
+        statsAction = QAction("Stats", self)
+        statsAction.setShortcut("Ctrl+S")
+        gameMenu.addAction(statsAction)
+        statsAction.triggered.connect(self.board.openScoreBoard)  # Connect clear action to the clear method
+
         # Quit Game action setup
         quitGameAction = QAction("Quit Game", self)
         quitGameAction.setShortcut("Ctrl+Q")
