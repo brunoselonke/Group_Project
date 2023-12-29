@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtCore import Qt
 from board import Board
@@ -31,3 +32,15 @@ class Go(QMainWindow):
         screen = self.screen().availableGeometry().center()
         gr.moveCenter(screen)
         self.move(gr.topLeft())
+
+        # Set up menus
+        mainMenu = self.menuBar()
+        mainMenu.setNativeMenuBar(False)
+        gameMenu = mainMenu.addMenu("Game Menu")
+        helpMenu = mainMenu.addMenu(" Help")
+
+        # Quit Game action setup
+        quitGameAction = QAction("Quit Game", self)
+        quitGameAction.setShortcut("Ctrl+Q")
+        gameMenu.addAction(quitGameAction)  # Quit Game Action
+        #quitGameAction.triggered.connect(self.quitGame)  # Connect clear action to the clear method
