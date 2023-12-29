@@ -3,12 +3,11 @@ from piece import Piece
 
 class GameLogic:
     # Function to update liberties after placing a piece on the board
+
     def updateLibertiesOnPiecePlacement(self, board, row, col):
         # Get the stone that was just placed
         placed_stone = board[row][col]
-        self.current_color = placed_stone.getPiece()
-        self.neighboring_color = self.getNeighboringColor(board, row, col)
-
+        #self.neighboring_color = self.getNeighboringColor(board, row, col)
 
         # Define the directions to check: left, right, top, bottom
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
@@ -28,10 +27,7 @@ class GameLogic:
 
         # Check if placing the stone results in immediate loss of liberties
         if self.calculateLiberties(board, row, col) == 0:
-            if self.current_color == self.neighboring_color:
-                return True
-            else:
-                return False  # Placement results in suicide, disallow it
+            return False  # Placement results in suicide, disallow it
 
         # Update the liberties of the placed stone
         self.calculateLiberties(board, row, col)

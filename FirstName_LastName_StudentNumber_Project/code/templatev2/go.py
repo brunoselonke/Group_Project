@@ -1,5 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtCore import Qt
+
+from game_logic import GameLogic
 from board import Board
 from score_board import ScoreBoard
 
