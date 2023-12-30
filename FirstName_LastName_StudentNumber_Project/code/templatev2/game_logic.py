@@ -7,7 +7,7 @@ class GameLogic:
     def updateLibertiesOnPiecePlacement(self, board, row, col):
         # Get the stone that was just placed
         placed_stone = board[row][col]
-        #self.neighboring_color = self.getNeighboringColor(board, row, col)
+        # self.neighboring_color = self.getNeighboringColor(board, row, col)
 
         # Define the directions to check: left, right, top, bottom
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
@@ -57,7 +57,7 @@ class GameLogic:
                 if 0 <= new_r < len(board) and 0 <= new_c < len(board[0]):
                     neighbor = board[new_r][new_c]
 
-                    if neighbor.getPiece() == 0 or neighbor.getPiece() ==3 or neighbor.getPiece()==4:
+                    if neighbor.getPiece() == 0 or neighbor.getPiece() == 3 or neighbor.getPiece() == 4:
                         liberties += 1
                     elif neighbor.getPiece() == color and (new_r, new_c) not in visited:
                         stack.append((new_r, new_c))
@@ -83,7 +83,6 @@ class GameLogic:
                     # Capture stones recursively for each stone with zero liberties
                     if (row, col) not in visited:
                         self.updateCapturedStones(board, row, col, color, visited)
-
 
     # Helper method to update captured stones recursively
     def updateCapturedStones(self, board, row, col, color, visited):
