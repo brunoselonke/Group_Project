@@ -1,11 +1,10 @@
 from piece import Piece
 
-
 class GameLogic:
     def __init__(self):
         self.history = []  # Initialize the history attribute
-    # Function to update liberties after placing a piece on the board
 
+    # Function to update liberties after placing a piece on the board
     def updateLibertiesOnPiecePlacement(self, board, row, col):
         placed_stone = board[row][col]
 
@@ -58,7 +57,6 @@ class GameLogic:
                 return True
         return False
 
-
     def areBoardsEqualIgnoringLiberties(self, board1, board2):
         for i in range(len(board1)):
             for j in range(len(board1[0])):
@@ -82,8 +80,6 @@ class GameLogic:
                     return False
         return True
 
-    # Function to calculate liberties for a stone
-    # Function to calculate liberties for a stone
     # Function to calculate liberties for a stone
     def calculateLiberties(self, board, row, col):
         stone = board[row][col]
@@ -232,3 +228,5 @@ class GameLogic:
             return neighboring_colors.pop()
         else:
             return None  # Multiple neighboring colors or no neighboring colors
+
+# End of the GameLogic class

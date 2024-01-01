@@ -1,3 +1,8 @@
+# Apollo Lima
+# Bruno Selonke
+# Edivaldo 'Eddie' Figueiredo
+
+# Import necessary modules and classes
 from PyQt6.QtWidgets import QFrame, QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy, QMessageBox
 from PyQt6.QtCore import Qt, QBasicTimer, pyqtSignal, QPointF, QUrl
 from PyQt6.QtGui import QColor, QImage, QPen, QIcon
@@ -7,23 +12,26 @@ from game_logic import GameLogic
 from PyQt6.QtGui import QPainter, QBrush
 from PyQt6.QtMultimedia import QSoundEffect
 
-
-class Board(QFrame):  # base the board on a QFrame widget
-    updateTimerSignal = pyqtSignal(int)  # signal sent when timer is updated
-    clickLocationSignal = pyqtSignal(str)  # signal sent when there is a new click location
+class Board(QFrame):
+    # Define the Board class inheriting from QFrame
+    updateTimerSignal = pyqtSignal(int)
+    # Signal sent when the timer is updated
+    clickLocationSignal = pyqtSignal(str)
+    # Signal sent when there is a new click location
     boardSize = 6
-    updateBoardStateSignal = pyqtSignal(list)  # Define the signal for updating the board state
+    updateBoardStateSignal = pyqtSignal(list)
+    # Signal for updating the board state
 
-    # TODO set the board width and height to be square
-    # TODO this needs updating
-    boardWidth = boardSize  # board is 0 squares wide
+
+    boardWidth = boardSize  # Board is 0 squares wide
     boardHeight = boardSize
-    timerSpeed = 10000  # the timer updates every 1 millisecond
-    counter = 10  # the number the counter will count down from
-
+    timerSpeed = 10000  # The timer updates every 1 millisecond
+    counter = 10  # The number the counter will count down from
 
     def __init__(self, parent):
+        # Constructor for the Board class
         super().__init__(parent)
+        # Initialize the board and set up initial attributes
         self.initBoard()
         self.current_player = "Player One"
         self.game_logic = GameLogic()
@@ -32,39 +40,40 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.pass_count_player_two = 0
 
     def getCurrentPlayer(self):
+        # Getter method to retrieve the current player
         return self.current_player
 
     def handleBoardStateUpdate(self, updated_board_array):
         '''Handle the updated board state'''
-
+        # Handle the updated board state
         # You can perform any actions here based on the updated board state
         # For example, print the updated board array
         print("Updated Board State:")
         self.printBoardArray()
 
     def initBoard(self):
-        '''initiates board'''
-        self.timer = QBasicTimer()  # create a timer for the game
-        self.isStarted = False  # game is not currently started
-        self.start()  # start the game which will start the timer
-        self.boardArray = []  # TODO - create a 2d int/Piece array to store the state of the game
+        '''Initiate the board'''
+        self.timer = QBasicTimer()  # Create a timer for the game
+        self.isStarted = False  # Game is not currently started
+        self.start()  # Start the game which will start the timer
+        self.boardArray = []
         self.boardArray = [[Piece(0, x, y) for x in range(self.boardHeight + 1)] for y in range(self.boardWidth + 1)]
-        # +1 makes the pieces been drawn in the last column and line
-        self.printBoardArray()  # TODO - uncomment this method after creating the array above
-        self.margin = 120  # controls the margin between the board and the window
-        self.piecesSize = 2.8  # controls pieces sizes, the smaller the number the bigger the piece
+        # +1 makes the pieces be drawn in the last column and line
+        self.printBoardArray()
+        self.margin = 120  # Controls the margin between the board and the window
+        self.piecesSize = 2.8  # Controls piece sizes; the smaller the number, the bigger the piece
 
         # Create a restart button
         self.restartButton = QPushButton("Resign", self)
         self.restartButton.clicked.connect(self.resetGame)
         self.applyButtonStyle(self.restartButton)
-        self.restartButton.setFixedSize(100,50)
+        self.restartButton.setFixedSize(100, 50)
 
-        # Create a pass  button
+        # Create a pass button
         self.passButton = QPushButton("Pass", self)
         self.passButton.clicked.connect(self.passTurn)
         self.applyButtonStyle(self.passButton)
-        self.passButton.setFixedSize(100,50)
+        self.passButton.setFixedSize(100, 50)
 
         # Create a button to open the ScoreBoard
         self.scoreboard_button = QPushButton("Stats", self)
@@ -72,13 +81,12 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.applyButtonStyle(self.scoreboard_button)
         self.scoreboard_button.setFixedSize(100, 50)
 
-        #increase the font size
+        # Increase the font size
         font = self.restartButton.font()
         font.setPointSize(font.pointSize() * 2)
         self.restartButton.setFont(font)
         self.passButton.setFont(font)
         self.scoreboard_button.setFont(font)
-
 
         # Create a layout for the board and the buttons
         buttonLayout = QHBoxLayout()
@@ -88,16 +96,15 @@ class Board(QFrame):  # base the board on a QFrame widget
         buttonLayout.addSpacing(125)
         buttonLayout.addWidget(self.scoreboard_button)
 
-
         mainLayout = QVBoxLayout(self)
         mainLayout.addLayout(buttonLayout)
         mainLayout.addSpacing(12)
         mainLayout.addWidget(self)
         mainLayout.setAlignment(Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
-
         self.setLayout(mainLayout)
 
     def applyButtonStyle(self, button):
+        # Apply styling to buttons using CSS
         button.setStyleSheet(
             "QPushButton {"
             "   background-color: #F5F5DC;"
@@ -112,9 +119,8 @@ class Board(QFrame):  # base the board on a QFrame widget
             "   background-color: #CD853F;"  # Darken the color when pressed
             "}"
         )
-
     def printBoardArray(self):
-        '''prints the boardArray with black and white pieces'''
+        '''Print the boardArray with black and white pieces'''
         print("boardArray:")
         for row in self.boardArray:
             row_str = ""
@@ -128,37 +134,37 @@ class Board(QFrame):  # base the board on a QFrame widget
             print(row_str)
 
     def mousePosToColRow(self, event):
-        '''convert the mouse click event to a row and column'''
+        '''Convert the mouse click event to a row and column'''
+
 
     def squareWidth(self):
-        '''returns the width of one square in the board'''
+        '''Return the width of one square in the board'''
         return (self.contentsRect().width() - 2 * self.margin) / self.boardWidth
 
     def squareHeight(self):
-        '''returns the height of one square of the board'''
+        '''Return the height of one square of the board'''
         return (self.contentsRect().height() - 2 * self.margin) / self.boardHeight
 
     def start(self):
-        '''starts game'''
-        self.isStarted = True  # set the boolean which determines if the game has started to TRUE
-        self.timer.start(self.timerSpeed, self)  # start the timer with the correct speed
+        '''Start the game'''
+        self.isStarted = True  # Set the boolean determining if the game has started to TRUE
+        self.timer.start(self.timerSpeed, self)  # Start the timer with the correct speed
         print("start () - timer is started")
 
     def timerEvent(self, event):
-        '''this event is automatically called when the timer is updated. based on the timerSpeed variable '''
-        # TODO adapt this code to handle your timers
-        if event.timerId() == self.timer.timerId():  # if the timer that has 'ticked' is the one in this class
+        '''This event is automatically called when the timer is updated based on the timerSpeed variable'''
+
+        if event.timerId() == self.timer.timerId():  # If the timer that has 'ticked' is the one in this class
             if Board.counter == 0:
                 print("Game over")
             self.counter -= 1
             print('timerEvent()', self.counter)
             self.updateTimerSignal.emit(self.counter)
         else:
-            super(Board, self).timerEvent(event)  # if we do not handle an event we should pass it to the super
-            # class for handling
+            super(Board, self).timerEvent(event)  # If we do not handle an event, pass it to the superclass for handling
 
     def paintEvent(self, event):
-        '''paints the board and the pieces of the game'''
+        '''Paint the board and the pieces of the game'''
         painter = QPainter(self)
         painter.translate(self.margin, self.margin)
         board_image = QImage(
@@ -219,15 +225,14 @@ class Board(QFrame):  # base the board on a QFrame widget
         self.clickLocationSignal.emit(click_loc)
         self.pass_count_player_one = 0
         self.pass_count_player_two = 0
-
     def resetGame(self):
-        '''clears pieces from the board'''
+        '''Clear pieces from the board'''
         self.initBoard()
         self.current_player = "Player One"
         self.game_logic = GameLogic()
         self.updateBoardStateSignal.connect(self.handleBoardStateUpdate)
         self.update()
-        # TODO write code to reset game
+
 
     def passTurn(self):
         print("Pass turn")
@@ -247,12 +252,11 @@ class Board(QFrame):  # base the board on a QFrame widget
             self.showGameEndNotification(points_player_one, points_player_two)
             self.resetGame()
 
-
     def drawBoardSquares(self, painter):
-        '''draw all the square on the board'''
+        '''Draw all the squares on the board'''
         self.brush = QBrush(Qt.BrushStyle.SolidPattern)
         self.brush.setColor(Qt.GlobalColor.transparent)
-        border_width = 3  # Adjust this value to make the pen ticker or thicker
+        border_width = 3  # Adjust this value to make the pen thicker or thinner
         border_color = Qt.GlobalColor.black  # Adjust the color as needed
 
         pen = QPen(border_color)
@@ -274,7 +278,7 @@ class Board(QFrame):  # base the board on a QFrame widget
                 painter.restore()
 
     def drawPieces(self, painter):
-        '''draw the pieces on the board'''
+        '''Draw the pieces on the board'''
         for row in range(0, len(self.boardArray)):
             for col in range(0, len(self.boardArray[0])):
                 painter.save()
@@ -353,3 +357,5 @@ class Board(QFrame):  # base the board on a QFrame widget
 
         msg_box.setText(message)
         msg_box.exec()
+
+# End of the Board class
