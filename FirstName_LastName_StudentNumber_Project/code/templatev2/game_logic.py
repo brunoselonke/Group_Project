@@ -2,17 +2,18 @@ from piece import Piece
 
 
 class GameLogic:
+    def __init__(self):
+        self.history = []  # Initialize the history attribute
     # Function to update liberties after placing a piece on the board
 
     def updateLibertiesOnPiecePlacement(self, board, row, col):
-        # Get the stone that was just placed
         placed_stone = board[row][col]
-        # self.neighboring_color = self.getNeighboringColor(board, row, col)
 
-        # Define the directions to check: left, right, top, bottom
-        directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+        # Save the original board state before the move
+        original_board = self.copyBoard(board)
 
         # Update liberties for the neighboring stones
+        directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
 
@@ -32,8 +33,57 @@ class GameLogic:
         # Update the liberties of the placed stone
         self.calculateLiberties(board, row, col)
 
+        # Check for repeated position (Ko rule)
+        if self.isRepeatedPosition(board):
+            # Restore the original board state
+            self.restoreOriginalBoard(board, original_board)
+            return False  # Disallow move due to Ko rule
+
+        # Update the history with the current board state
+        self.history.append(self.copyBoard(board))
+
         return True  # Stone placement successful
 
+    def restoreOriginalBoard(self, current_board, original_board):
+        for i in range(len(current_board)):
+            for j in range(len(current_board[0])):
+                current_board[i][j].Status = original_board[i][j].Status
+                current_board[i][j].liberties = original_board[i][j].liberties
+
+    def isRepeatedPosition(self, current_board):
+        current_state = self.copyBoardIgnoringLiberties(current_board)
+
+        for past_board in self.history[:-1]:  # Exclude the initial state from comparison
+            if self.areBoardsEqualIgnoringLiberties(current_state, past_board):
+                return True
+        return False
+
+
+    def areBoardsEqualIgnoringLiberties(self, board1, board2):
+        for i in range(len(board1)):
+            for j in range(len(board1[0])):
+                if board1[i][j].getPiece() != board2[i][j].getPiece():
+                    return False
+        return True
+
+    def copyBoardIgnoringLiberties(self, board):
+        return [[Piece(cell.getPiece(), cell.x, cell.y) for cell in row] for row in board]
+
+    def copyBoard(self, board):
+        return [[Piece(cell.getPiece(), cell.x, cell.y) for cell in row] for row in board]
+
+    def areBoardsEqual(self, board1, board2):
+        for i in range(len(board1)):
+            for j in range(len(board1[0])):
+                if (
+                        board1[i][j].getPiece() != board2[i][j].getPiece()
+                        or board1[i][j].getLiberties() != board2[i][j].getLiberties()
+                ):
+                    return False
+        return True
+
+    # Function to calculate liberties for a stone
+    # Function to calculate liberties for a stone
     # Function to calculate liberties for a stone
     def calculateLiberties(self, board, row, col):
         stone = board[row][col]
@@ -44,7 +94,6 @@ class GameLogic:
         visited = set()
         stack = [(row, col)]
 
-        # Explore neighbors to count liberties using a stack-based approach
         while stack:
             r, c = stack.pop()
             if (r, c) in visited:
@@ -63,6 +112,16 @@ class GameLogic:
                         stack.append((new_r, new_c))
 
         stone.setLiberties(liberties)  # Set liberties count for the stone
+
+        # Recursively update liberties for neighboring stones
+        while stack:
+            r, c = stack.pop()
+            for dr, dc in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                new_r, new_c = r + dr, c + dc
+
+                if 0 <= new_r < len(board) and 0 <= new_c < len(board[0]):
+                    self.calculateLiberties(board, new_r, new_c)
+
         return liberties  # Return the calculated liberties count
 
     def captureStones(self, board):
